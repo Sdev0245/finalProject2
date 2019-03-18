@@ -16,9 +16,9 @@
                         <!-- <button >x</button>  -->
                 </form>
                         <h1>#<%=order._id%></h1>
-                            <%order.items.forEach(product=>{%>
-                               <h2>Title: <%=product.title%></h2>
-                               <h2>price:<%=product.price%></h2>
+                            <%order.products.forEach(product=>{%>
+                               <h2>Title: <%=product.product.title%></h2>
+                               <h2>price:<%=product.product.price%></h2>
                                   <ul>quantity: <%=product.quantity%></ul>
                                 <%})%>
                                 <hr>
