@@ -8,7 +8,8 @@ exports.getProducts = (req, res, next) => {
       res.render('shop/product-list', {
         prods: val,
         pageTitle: 'All Products',
-        path: '/products'
+        path: '/products',
+        isAuthenticated:req.session.isLogged
       });
     })
     .catch(err => console.log(err));
@@ -23,7 +24,8 @@ exports.getProduct = (req, res, next) => {
     res.render('shop/product-detail', {
       product: product,
       pageTitle: product.title,
-      path: '/products'
+      path: '/products',
+        isAuthenticated:req.session.isLogged
     });
   })
   .catch(err => console.log(err));
@@ -37,7 +39,8 @@ exports.getIndex = (req, res, next) => {
       res.render('shop/index', {
         prods: val,
         pageTitle: 'Shop',
-        path: '/'
+        path: '/' ,
+        isAuthenticated:req.session.isLogged
       });
     })
     .catch(err => console.log(err));
@@ -50,7 +53,9 @@ exports.getCart = (req, res, next) => {
   res.render('shop/cart', {
     path: '/cart',
     pageTitle: 'Your Cart',
-    products: products.cart.items
+    products: products.cart.items,
+    
+        isAuthenticated:req.session.isLogged
   })
  }).catch(err=>{
    console.log(err);
@@ -188,11 +193,13 @@ exports.postOrder = (req, res, next) => {
 };
 
 exports.getOrders = (req, res, next) => {
-  Order.find({'user.userId':req.user._id}).then(order=>{
+  Order.find({'user.userId':req.user._id}).then(orders=>{
    res.render('shop/orders', {
       path: '/orders',
       pageTitle: 'Your Orders',
-      order:order
+      orders:orders
+      ,
+        isAuthenticated:req.isLogged
     });
    // console.log(order[0].products[0]);
   }).catch(err=>{
@@ -219,6 +226,7 @@ exports.deleteOrder=  (req,res,next) =>{
 exports.getCheckout = (req, res, next) => {
   res.render('shop/checkout', {
     path: '/checkout',
-    pageTitle: 'Checkout'
+    pageTitle: 'Checkout',
+        isAuthenticated:req.session.isLogged
   });
 };
