@@ -1,7 +1,7 @@
 const path = require('path');
 
 const express = require('express');
-
+const reauth = require('../middleware/reauth');
 const shopController = require('../controllers/shop');
 
 const router = express.Router();
@@ -11,16 +11,15 @@ router.get('/', shopController.getIndex);
 router.get('/products', shopController.getProducts);
 
   router.get('/products/:productId', shopController.getProduct);
+  router.get('/orders',reauth,shopController.getOrders);
+router.get('/cart', reauth,shopController.getCart);
 
-router.get('/cart', shopController.getCart);
+router.post('/cart',reauth,shopController.postCart);
 
-router.post('/cart', shopController.postCart);
+router.post('/cart-delete-item',reauth, shopController.postCartDeleteProduct);
 
-router.post('/cart-delete-item', shopController.postCartDeleteProduct);
+router.post('/create-order',reauth,reauth,shopController.postOrder);
 
-router.post('/create-order',shopController.postOrder);
-
-router.get('/orders', shopController.getOrders);
 
 router.post('/delete-order',shopController.deleteOrder);
 

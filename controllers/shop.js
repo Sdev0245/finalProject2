@@ -9,7 +9,8 @@ exports.getProducts = (req, res, next) => {
         prods: val,
         pageTitle: 'All Products',
         path: '/products',
-        isAuthenticated:req.session.isLogged
+        isAuthenticated:req.session.isLogged,
+       
       });
     })
     .catch(err => console.log(err));
@@ -40,7 +41,8 @@ exports.getIndex = (req, res, next) => {
         prods: val,
         pageTitle: 'Shop',
         path: '/' ,
-        isAuthenticated:req.session.isLogged
+        isAuthenticated:req.session.isLogged,
+      
       });
     })
     .catch(err => console.log(err));
@@ -146,7 +148,7 @@ exports.postOrder = (req, res, next) => {
       });
       const order = new Order({
         user: {
-          name: req.user.name,
+          email: req.user.email,
           userId: req.user
         },
         products: products
@@ -197,9 +199,8 @@ exports.getOrders = (req, res, next) => {
    res.render('shop/orders', {
       path: '/orders',
       pageTitle: 'Your Orders',
-      orders:orders
-      ,
-        isAuthenticated:req.isLogged
+      orders:orders,
+        isAuthenticated:req.session.isLogged
     });
    // console.log(order[0].products[0]);
   }).catch(err=>{

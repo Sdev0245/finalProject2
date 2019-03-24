@@ -3,9 +3,11 @@
 </head>
 
 <body>
+      
     <%- include('../includes/navigation.ejs') %>
 
     <main>
+           
         <% if (prods.length > 0) { %>
             <div class="grid">
                 <% for (let product of prods) { %>
@@ -33,6 +35,7 @@
                 <% } %>
             </div>
         <% } else { %>
+           
             <h1>No Products Found!</h1>
         <% } %>
     </main>

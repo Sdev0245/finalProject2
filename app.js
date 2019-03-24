@@ -1,78 +1,73 @@
 const path = require('path');
-// const Order = require('./models/order');
-// const OrderItem =  require('./models/orderItem');
+const csrf = require('csurf');
 const express = require('express');
 const bodyParser = require('body-parser');
-// const Cart = require('./models/cart');
-// const CartItem = require('./models/cartItem');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
 const errorController = require('./controllers/error');
 const User = require('./models/user');
-const Product = require('./models/product');
-const session = require('express-session');
-const mongoose =require('mongoose');
-const app = express();
+const flash = require('connect-flash');
 
-const mongodb = require('mongodb');
+const MONGODB_URI =
+  'mongodb+srv://test123:jJQBtCPB801CoiWv@cluster0-w4lk4.mongodb.net/shop';
+
+const app = express();
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: 'sessions'
+});
+const csrfProtection = csrf();
+
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
-const MongoDbStore = require('connect-mongodb-session')(session);
-const store = new MongoDbStore({
-    uri:'mongodb+srv://test123:jJQBtCPB801CoiWv@cluster0-w4lk4.mongodb.net/shop',
-    collection:'sessions'
-});
-app.use(session({
-    secret:'my secret',
-    resave:false,
-    saveUninitialized:false,
-    store:store
-}))
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
-const auth = require('./routes/auth');
+const authRoutes = require('./routes/auth');
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use((req,res,next)=>{
-    if(!req.session.user)
-     return next();
-    User.findById(req.session.user.id)
-    .then(user=>{
-       console.log(user);
-     
-       req.user = user;
-       next();
-    }).catch(err=>{
-        console.log(err);
+app.use(
+  session({
+    secret: 'my secret',
+    resave: false,
+    saveUninitialized: false,
+    store: store
+  })
+);
+app.use(flash());
+app.use(csrfProtection);
+
+app.use((req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then(user => {
+      req.user = user;
+      next();
     })
+    .catch(err => console.log(err));
 });
+
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLogged;
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
+
 app.use('/admin', adminRoutes);
- app.use(shopRoutes);
- app.use(auth);
-//  app.use((req,res,next)=>{
-//      User.findById('5c8e3ab559b8002d4c32c4dc').then(user=>{
-//          req.session.user = user;
-//          req.user =user
+app.use(shopRoutes);
+app.use(authRoutes);
 
-//      }).catch(err=>{
-//          console.log(err);
-//      })
-//  })
-mongoose.connect('mongodb+srv://test123:jJQBtCPB801CoiWv@cluster0-w4lk4.mongodb.net/shop?retryWrites=true',{ useNewUrlParser: true }).then(data=>{
-//console.log(data); 
+app.use(errorController.get404);
 
-User.findOne().then(user=>{
-    if(!user)
-    {
-        const user = new User({
-            name:'test123',
-            email:'test@test.com'
-        })
-        user.save();
-    }
-      
-})
-app.listen(3000);
-
-}).catch(err=>{
+mongoose
+  .connect(MONGODB_URI,{ useNewUrlParser: true })
+  .then(result => {
+    app.listen(3000);
+  })
+  .catch(err => {
     console.log(err);
-})
+  });
