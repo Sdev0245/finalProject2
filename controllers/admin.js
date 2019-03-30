@@ -1,5 +1,6 @@
 const Product = require('../models/product');
 const {validationResult} = require('express-validator/check');
+const filehelper = require('../util/filehelper')
 const mongodb = require('mongodb');
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -13,30 +14,60 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
   const error =  validationResult(req);
-  console.log(error.array());
+  console.log('++++++++',error.array());
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const image = req.file;
   const price = req.body.price;
   const description = req.body.description;
- 
-  const product =new Product({
-    title:title,
-    imageUrl:imageUrl,
-    price:price,
-    description:description,
-    userId:req.user
-  });
+  console.log(image);
   if(!error.isEmpty())
   {
     return  res.render('admin/edit-product', {
       pageTitle: 'Add Product',
       path: '/admin/add-product',
       editing: true,
-      errMessage:error.array()[0],
-      product:product
+      errMessage:error.array()[0].msg,
+      product:{
+        product :{
+          title:title,
+          imageUrl:image,
+          price:price,
+          description:description,
+          userId:req.user
+      
+         }
+      }
      
     });
   }
+ 
+ if(!image)
+ {
+  return  res.render('admin/edit-product', {
+    pageTitle: 'Add Product',
+    path: '/admin/add-product',
+    editing: true,
+    errMessage:'Please select a proper image of png or jpg or jpeg format',
+  
+    product :{
+      title:title,
+      imageUrl:undefined,
+      price:price,
+      description:description,
+      userId:req.user
+  
+     }
+  });
+ }
+ const imageUrl = image.path;
+ const product =new Product({
+  title:title,
+  imageUrl:imageUrl,
+  price:price,
+  description:description,
+  userId:req.user
+});
+  
   product.save().then(product=>{
  res.redirect('/products');
   }).catch(err=>{
@@ -96,10 +127,10 @@ exports.postEditProduct = (req, res, next) => {
   const prodId = req.body.productId;
   const updatedTitle = req.body.title;
   const updatedPrice = req.body.price;
-  const updatedImageUrl = req.body.imageUrl;
+  const updatedImageUrl = req.file;
   const updatedDesc = req.body.description;
   //const product =new Product(updatedTitle,updatedPrice,updatedImageUrl,updatedDesc,prodId);
-  
+ 
 Product.findById({_id:prodId,userId:req.user._id}).then(product=>{
 
   product.title = updatedTitle;
@@ -107,6 +138,17 @@ Product.findById({_id:prodId,userId:req.user._id}).then(product=>{
   product.price = updatedPrice;
   product.imageUrl = updatedImageUrl;
   product.description = updatedDesc;
+  if(!updatedImageUrl)
+  {
+    return  res.render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/add-product',
+      editing: true,
+      errMessage:'Upload an image with jpeg or png or jpg',
+      product : product
+     
+    });
+  }
   const error  = validationResult(req);
 console.log(error.array());
   if(!error.isEmpty())
@@ -143,10 +185,19 @@ exports.getProducts = (req, res, next) => {
  })
 };
 
-exports.postDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
+exports.deleteProduct = (req, res, next) => {
+  const prodId = req.params.productId;
+
   Product.findByIdAndRemove(prodId).then(product=>{
-    res.redirect('/admin/products')
+
+     // console.log('removed',product);
+      return filehelper.deleteFile(product.imageUrl);
+   
+  }).then(()=>{
+
+res.status(200).json({message:
+"Success"
+})
   }).catch(err=>{
 
   console.log(err);

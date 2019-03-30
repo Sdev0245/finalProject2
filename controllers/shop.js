@@ -1,6 +1,9 @@
 const Product = require('../models/product');
 // const Cart = require('../models/cart');
 const Order =require('../models/order');
+const path = require('path');
+const fs =require('fs');
+const pdfDocument= require('pdfkit');
 //const orderItem =require('../models/orderItem');
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -34,16 +37,29 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.find()
-    .then((val) => {
+var  page = +req.query.page;
+ console.log(page);
+  const ITEMS_PER_PAGE = 2 ; 
+  var total_products ;
+   Product.countDocuments().then(products=>{
+    total_products  = products;
+return   Product.find().skip((page-1)*ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE);
+   }).then((val) => {
      /// console.log(val);
       res.render('shop/index', {
         prods: val,
         pageTitle: 'Shop',
         path: '/' ,
         isAuthenticated:req.session.isLogged,
+        currentPage:page,
+        hasNextPage:(ITEMS_PER_PAGE*page)<total_products,
+        hasPrevPage:page>1,
+        nextPage:page+1,
+        prevPage:page-1,
+        lastPage:Math.ceil(total_products/ITEMS_PER_PAGE)
       
       });
+      console.log(+page);
     })
     .catch(err => console.log(err));
 };
@@ -231,3 +247,50 @@ exports.getCheckout = (req, res, next) => {
         isAuthenticated:req.session.isLogged
   });
 };
+
+exports.getOrdersId =(req,res,next)=>{
+ 
+  const orderId = req.params.orderId;
+  Order.findById(orderId).then(order=>{
+    if(!order)
+    {
+      return next(new Error('Not able to find the file '));
+    }
+
+  else if(order.user.userId.toString() !== req.user._id.toString())
+  {
+    return next(new Error('Not able to find the file '));
+  }
+  const pdfkit =new pdfDocument();
+
+  const orderName ='invoice'+'-'+orderId+'.pdf';
+  res.setHeader('Content-Type','application/pdf');
+  const orderPath = path.join('data','invoice',orderName);
+  pdfkit.pipe(fs.createWriteStream(orderPath));
+ pdfkit.image('./images/a.png',{
+  // fit: [250, 300],
+  align: 'center',
+  valign: 'center'
+ });
+  pdfkit.pipe(res);
+  let total_price= 0;
+ pdfkit.fontSize('22').text('\n OrderId :\n' + orderId);
+order.products.forEach(product=>{
+  total_price = total_price+product.product.price;
+  pdfkit.text('-------------------------------------------');
+  
+   pdfkit.fontSize('15').text('title of product: '+product.product.title);
+   pdfkit.fontSize('15').text('product price: $'+product.product.price);
+
+ 
+   
+})
+pdfkit.fontSize('20').text('total Price  :$'+total_price);
+  pdfkit.end();
+
+  }).catch(err=>{
+    return next(err);
+  })
+
+
+}

@@ -25,6 +25,6 @@ router.post('/edit-product',[
     body('description','Please enter the characters of minimum 10 length').isLength({min:10})
 ], adminController.postEditProduct);
 
-router.post('/delete-product',reauth, adminController.postDeleteProduct);
+router.delete('/product/:productId',reauth, adminController.deleteProduct);
 
 module.exports = router;

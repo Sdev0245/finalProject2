@@ -11,7 +11,7 @@ router.get('/', shopController.getIndex);
 router.get('/products', shopController.getProducts);
 
   router.get('/products/:productId', shopController.getProduct);
-  router.get('/orders',reauth,shopController.getOrders);
+ 
 router.get('/cart', reauth,shopController.getCart);
 
 router.post('/cart',reauth,shopController.postCart);
@@ -23,6 +23,8 @@ router.post('/create-order',reauth,reauth,shopController.postOrder);
 
 router.post('/delete-order',shopController.deleteOrder);
 
+router.get('/orders',reauth,shopController.getOrders);
+router.get('/orders/:orderId',reauth,shopController.getOrdersId);
 // router.get('/checkout', shopController.getCheckout);
 
 module.exports = router;
