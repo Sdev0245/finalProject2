@@ -1,14 +1,14 @@
 {
-  "name": "nodejs-complete-guide",
+  "name": "nodejs",
   "version": "1.0.0",
-  "description": "Complete Node.js Guide",
+  "description": "nodejs",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js",
     "start-server": "node app.js"
   },
-  "author": "Maximilian Schwarzmüller",
+  "author": "Deven Sharma",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^1.18.3"
@@ -32,7 +32,16 @@
     "nodemailer-sendgrid-transport": "^0.2.0",
     "pdfkit": "^0.9.0",
     "pug": "^2.0.3",
+    "razorpay": "^2.0.4",
     "sequelize": "^4.42.1",
     "session": "^0.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdev0245/finalProject2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sdev0245/finalProject2/issues"
+  },
+  "homepage": "https://github.com/Sdev0245/finalProject2#readme"
 }

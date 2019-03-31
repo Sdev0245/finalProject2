@@ -1,0 +1,45 @@
+<%- include('../includes/head.ejs') %>
+    <link rel="stylesheet" href="/css/cart.css">
+    
+    </head>
+    <meta name="viewport" content="width=device-width">
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+        <main>
+        
+            <ul class="cart__item-list">
+               
+                <% products.forEach(p => { %>
+                    <li class="cart__item">
+
+                        <h1><%= p.productId.title %></h1>
+                        <h2>Quantity: <%= p.quantity %></h2>
+                    </li>
+                <% }) %>
+            </ul>
+            <div class="centered">
+                <h2>Total: <%= total_price %></h2>
+            </div>
+           
+            <div class ="centered"> 
+            <form action="/create-order" method="POST">
+                <!-- Note that the amount is in its subunit value = 599 -->
+                               <script
+                    src="https://checkout.razorpay.com/v1/checkout.js"
+                    data-key="<%= api_key %>"
+                    data-amount="<%= total_price*100 %>" // The amount is shown in currency subunits. Actual amount is ₹599.
+                    
+                    data-currency="INR" // Optional. Same as Order currency
+                    data-buttontext="Pay "
+                    data-name="NodeApp"
+                    data-description="Purchase Description"
+                    data-image="https://your-awesome-site.com/your_logo.jpg"
+                    data-prefill.name="Deven"
+                    data-prefill.email="<%= email %>"
+                    data-theme.color="#F37254"
+                ></script>
+            </div>
+                <input type="hidden" value="<%=payment_id%>" name="paymentId">
+                </form>
+        </main>
+        <%- include('../includes/end.ejs') %>

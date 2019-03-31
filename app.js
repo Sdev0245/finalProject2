@@ -19,6 +19,11 @@ const store = new MongoDBStore({
   collection: 'sessions'
 });
 
+// app.use((err,req,res)=>{
+//   console.log(err);
+//   next();
+// })
+
 const csrfProtection = csrf();
 const fileStorage = multer.diskStorage({
   destination:function(req,callback){
@@ -38,6 +43,9 @@ const filterImage = (req,file,cb)=>{
   cb(null,false);
   }
 }
+// require('./routes/testtxn')(app);
+// require('./routes/pgredirect')(app);
+// require('./routes/response')(app)
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -61,7 +69,10 @@ app.use(
 );
 app.use(flash());
 app.use(csrfProtection);
-
+app.use((error ,req,res,next)=>{
+  console.log(error);
+  next();
+})
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();

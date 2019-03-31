@@ -4,6 +4,8 @@ const Order =require('../models/order');
 const path = require('path');
 const fs =require('fs');
 const pdfDocument= require('pdfkit');
+const Razorpay =require('razorpay');
+// const config = require('../config/config');
 //const orderItem =require('../models/orderItem');
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -67,7 +69,7 @@ return   Product.find().skip((page-1)*ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE);
 exports.getCart = (req, res, next) => {
  req.user.populate('cart.items.productId').execPopulate()
   .then(products=>{
- // console.log(products.cart.items);
+ console.log(products.cart.items);
   res.render('shop/cart', {
     path: '/cart',
     pageTitle: 'Your Cart',
@@ -155,6 +157,15 @@ exports.postCartDeleteProduct = (req, res, next) => {
 
 
 exports.postOrder = (req, res, next) => {
+  var total_price= 0 ;
+  var instance = new Razorpay({
+    key_id: 'rzp_test_CnOSFhJTglS80m',
+    key_secret: 'YOUR_KEY_SECRET',
+  });
+const payment_Id = req.body.paymentId;
+  instance.payments.fetch(payment_Id).then(success=>{
+    console.log(success);
+  });
   req.user
     .populate('cart.items.productId')
     .execPopulate()
@@ -162,6 +173,8 @@ exports.postOrder = (req, res, next) => {
       const products = user.cart.items.map(i => {
         return { quantity: i.quantity, product: { ...i.productId._doc } };
       });
+ console.log(total_price);
+       
       const order = new Order({
         user: {
           email: req.user.email,
@@ -212,11 +225,29 @@ exports.postOrder = (req, res, next) => {
 
 exports.getOrders = (req, res, next) => {
   Order.find({'user.userId':req.user._id}).then(orders=>{
+    let total_price= 0 ;
+    let orderId ;
+    let email ;
+    let userId;
+ orders.forEach(order=>{
+  orderId = order._id;
+email = order.user.email;
+  order.products.forEach(p =>{
+     total_price =total_price + p.product.price * p.quantity;
+     userId = p.product.userId;
+   })
+ });
+console.log(total_price , orderId ,email,userId);
    res.render('shop/orders', {
       path: '/orders',
       pageTitle: 'Your Orders',
       orders:orders,
-        isAuthenticated:req.session.isLogged
+        isAuthenticated:req.session.isLogged,
+        total_price:total_price,
+        orderId :orderId,
+        email:email,
+        userId :userId,
+        // config:config
     });
    // console.log(order[0].products[0]);
   }).catch(err=>{
@@ -291,6 +322,59 @@ pdfkit.fontSize('20').text('total Price  :$'+total_price);
   }).catch(err=>{
     return next(err);
   })
+
+
+}
+
+exports.getCheckout = (req,res,next)=>{
+  var email;
+  var orderId;
+  var userId;
+return Order.find({'user.userId':req.user._id}).then(orders=>{
+
+  orders.forEach(order=>{
+
+orderId =order._id;
+
+    order.products.forEach(p=>{
+      userId = p.product.userId;
+      
+    })
+  })
+ var orderId1 =orderId[0];
+  
+  req.user
+  .populate('cart.items.productId')
+  .execPopulate()
+  .then(user => {
+    const products = user.cart.items;
+    let total = 0;
+    products.forEach(p => {
+      total += p.quantity * p.productId.price;
+    });
+    return res.render('shop/checkout', {
+      path: '/checkout',
+      pageTitle: 'Checkout',
+      products: products,
+      total_price: total,
+      orderId:orderId,
+      email:'sdeven515@gmail.com',
+      userId:userId,
+      api_key:'ADD_YOUR_API_KEY',
+      payment_id:userId.toString()
+    });
+  }).then(val=>{
+
+   return req.user.clearCart();
+  })
+  .catch(err => {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  });
+  
+})
+
 
 
 }
